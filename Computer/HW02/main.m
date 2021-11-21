@@ -27,7 +27,7 @@ snr = 10;
 % sigma2 = 10^-(snr/10) * mean(abs(x).^2);
 % n = sqrt(sigma2) * randn(size(x));
 % xn = x + n;
-rng(4)
+% rng(4)
 xn = awgn(x, snr, 'measured');
 disp(10*log10(sum(xn.^2) / sum((xn-x).^2)))
 
@@ -132,14 +132,14 @@ disp(mean(abs(func_Wnorm(x + xn)-func_Wnorm(x)-func_Wnorm(xn))))
 
 %% Q09
 V = G.e.^(0:2);
-h_fir = pinv(V)*G.U'*h;
+h_fir = pinv(V)*h;
 
 V_norm = e_norm.^(0:2);
-h_fir_norm = pinv(V_norm)*U_norm'*h_norm;
+h_fir_norm = pinv(V_norm)*h_norm;
 
 %% Q10
-h_new = G.U*V*h_fir;
-h_new_norm = U_norm*V_norm*h_fir_norm;
+h_new = V*h_fir;
+h_new_norm = V_norm*h_fir_norm;
 
 figure("Color","W");
 subplot(211); hold on
@@ -166,7 +166,7 @@ stem((1:8)+2*a, xd);
 stem((1:8)+3*a, xd_norm);
 stem((1:8)+4*a, xd_new);
 stem((1:8)+5*a, xd_new_norm);
-xlim([0.5 8.5])
+xlim([0.5 8.5+5*a])
 legend("clean x", "noisy x", "denoised x using L", "denoisted x using w_{norm}", ...
     "new denoised x using L", "new denoisted x using w_{norm}")
 
@@ -175,14 +175,15 @@ disp(10*log10(sum(xd_new.^2) / sum((xd_new-x).^2)))
 disp(10*log10(sum(xd_new_norm.^2) / sum((xd_new_norm-x).^2)))
 
 %%
+clc
 M = 2;
 V = G.e.^(0:(M-1));
-h_fir = pinv(V)*G.U'*h;
+h_fir = pinv(V)*h;
 V_norm = e_norm.^(0:(M-1));
-h_fir_norm = pinv(V_norm)*U_norm'*h_norm;
+h_fir_norm = pinv(V_norm)*h_norm;
 
-h_new = G.U*V*h_fir;
-h_new_norm = U_norm*V_norm*h_fir_norm;
+h_new = V*h_fir;
+h_new_norm = V_norm*h_fir_norm;
 
 xd_new = G.U*(xnhat.*h_new);
 xd_new_norm = U_norm*(xnhat_norm.*h_new_norm);
@@ -196,10 +197,34 @@ stem((1:8)+2*a, xd);
 stem((1:8)+3*a, xd_norm);
 stem((1:8)+4*a, xd_new);
 stem((1:8)+5*a, xd_new_norm);
-xlim([0.5 8.5])
+xlim([0.5 8.5+5*a])
 legend("clean x", "noisy x", "denoised x using L", "denoisted x using w_{norm}", ...
     "new denoised x using L", "new denoisted x using w_{norm}")
 
 disp(10*log10(sum(xn.^2) / sum((xn-x).^2)))
 disp(10*log10(sum(xd_new.^2) / sum((xd_new-x).^2)))
 disp(10*log10(sum(xd_new_norm.^2) / sum((xd_new_norm-x).^2)))
+%% Q13
+snr_L = zeros(7,1);
+snr_Wnorm = zeros(7,1);
+for M=2:8
+V = G.e.^(0:(M-1));
+h_fir = pinv(V)*h;
+V_norm = e_norm.^(0:(M-1));
+h_fir_norm = pinv(V_norm)*h_norm;
+
+h_new = V*h_fir;
+h_new_norm = V_norm*h_fir_norm;
+
+xd_new = G.U*(xnhat.*h_new);
+xd_new_norm = U_norm*(xnhat_norm.*h_new_norm);
+
+snr_L(M-1) = (10*log10(sum(xd_new.^2) / sum((xd_new-x).^2)));
+snr_Wnorm(M-1) = (10*log10(sum(xd_new_norm.^2) / sum((xd_new_norm-x).^2)));
+end
+figure("Color","w"); hold on
+plot(2:8, snr_L, "-o");
+plot(2:8, snr_Wnorm,"-o");
+xlim([1 9])
+xlabel("M"); ylabel("SNR(db)")
+legend("using L", "using W_{norm}")
