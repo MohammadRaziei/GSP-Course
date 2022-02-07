@@ -1,0 +1,517 @@
+\title{گزارش تمرین چهارم پردازش سیگنال‌های گرافی (امتیازی)}
+\author{محمد رضیئی فیجانی}
+%\date{15 بهمن 1400}
+
+
+\makeatletter
+\csvset{
+	myautotabularcenter/.style={
+		file=#1,
+		after head=\csv@pretable\begin{tabular}{|>{\columncolor{lightgray}}c|*{\csv@columncount}{c|}}\csv@tablehead,
+			table head=\hline مرکز خوشه & \csvlinetotablerow\\\hline,
+			before line=  & \csvlinetotablerow,
+			before first line= اعضای خوشه & \csvlinetotablerow,
+			command=  & \csvlinetotablerow,
+			late after line=\\,
+			table foot=\\\hline,
+			late after last line=\csv@tablefoot\end{tabular}\csv@posttable,
+	},
+}
+\makeatother
+
+
+\begin{document}
+\maketitle
+%\begin{latin}\lstinputlisting{codes/scanReduceIdxKernel.cu}\end{latin}
+
+
+\section{بخش اول}
+
+\subsection{}
+
+نحوه بارگزاری داده و  محاسبه‌ی $Z$ :
+
+\begin{latin}
+\begin{lstlisting}
+load('Data.mat')
+Z = gsp_distanz(data').^2;
+\end{lstlisting}
+\end{latin}
+
+\subsection{}
+
+نحوه آموزش با تابع
+\verb|gsp_learn_graph_log_degrees|
+
+\begin{latin}
+\begin{lstlisting}
+a = 5; b = 5;
+[W1] = gsp_learn_graph_log_degrees(Z, a, b);
+W1(W1<1e-3) = 0; % clean up zeros
+G1 = gsp_graph(W1);
+draw_animal_graph(G1.L,names);
+\end{lstlisting}
+\end{latin}
+
+
+نحوه آموزش با تابع
+\verb|gsp_learn_graph_l2_degrees|
+
+\begin{latin}
+\begin{lstlisting}
+a = 5;
+[W2] = gsp_learn_graph_l2_degrees(Z, a);
+W2(W2<1e-3) = 0; % clean up zeros
+G2 = gsp_graph(W2);
+draw_animal_graph(G2.L,names);
+\end{lstlisting}
+\end{latin}
+
+خروجی های این دو گراف به شرح زیر می‌باشند.
+\begin{figure}[h!]
+	\centering
+	\subfigure[\lr{W1}]{
+		\includegraphics[width=0.45\linewidth]{figs/test-gsp-learn-graph-log-degrees-Z-5-5}
+		\label{fig:test-gsp-learn-graph-log-degrees-z-5-5}}
+	\hfill
+	\subfigure[\lr{W2}]{
+		\includegraphics[width=0.45\linewidth]{figs/test-gsp-learn-graph-12-degrees-Z-5}
+		\label{fig:test-gsp-learn-graph-12-degrees-z-5}}
+	\caption{}
+\end{figure}
+\FloatBarrier
+
+
+
+
+\subsection{}
+
+
+برای بررسی تاثیر پارامتر های $a,b$ در تابع 
+\verb|gsp_learn_graph_log_degrees| 
+از تکه کد زیر استفاده کردیم.
+
+\begin{latin}
+\begin{lstlisting}
+a = 5; b = 5;
+[W] = gsp_learn_graph_log_degrees(Z, a, b);
+if max(max(W)) > 1e-3,  W = W / max(max(W)); end % nomalized by max value
+W(W<1e-3) = 0; % clean up zeros
+G = gsp_update_weights(G1,W);
+draw_animal_graph(G.L,names);
+text(0.3,-0.05,sprintf('gsp-learn-graph-log-degrees(Z, %g, %g)', a, b), "Units", "normalized")
+\end{lstlisting}
+\end{latin}
+
+به ازای ثابت نگه داشتن یکی از دو پارامتر $a$ و $b$ و تغییر دیگری، نتیجه زیر حاصل شده است.
+
+
+\begin{center}
+	%	\begin{longtable}{>{\raggedleft\arraybackslash}p{0.18\linewidth}lp{0.4\linewidth}}
+	%	\def\imagewidthincomptable{0.2\linewidth}
+%	\def\nextline{\newline\vspace{-0.1em}}
+%	\newcommand\addCompImage[1]{\raisebox{-0.89\totalheight}{\adjincludegraphics[width=\linewidth, trim={{0.15\width} {0.1\height} {0.12\width} {0.1\height}},clip]{#1}}\vspace{0.3em}}
+%	\newcommand\addCompImage[1]{\raisebox{-0.89\totalheight}{\adjincludegraphics[width=\linewidth]{#1}}\vspace{0}}
+%	\footnotesize
+	\begin{longtable}{ccC{0.65\linewidth}}
+		\caption{مقایسه نتایج با تغییر پارامتر $a,b$} \label{tab:comparison-a-b} \vspace{-1em} \\
+		
+		
+		\hline \multicolumn{1}{c}{\textbf{ردیف}} &  \multicolumn{1}{c}{\textbf{مشخصات}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endfirsthead
+		
+		\multicolumn{3}{c}%
+		{{\bfseries \tablename\ \thetable{}: ادامه‌ی جدول مقایسه نتایج با تغییر پارامتر $a,b$}} \\
+		\hline \multicolumn{1}{c}{\textbf{ردیف}} &  \multicolumn{1}{c}{\textbf{مشخصات}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endhead
+		
+		\hline \multicolumn{3}{l}{{ادامه در صفحه بعد}} \\ \hline
+		\endfoot
+		
+		\hline \hline
+		\endlastfoot
+		
+		\rownumber & 
+		$a = 5, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-5}} \\\hline
+		
+		\rownumber & 
+		$a = 5, b = 100$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-100}} \\\hline
+
+		\rownumber & 
+		$a = 5, b = 10$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-10}} \\\hline
+				
+		\rownumber & 
+		$a = 5, b = 1$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-1}} \\\hline		
+		\rownumber & 
+		$a = 5, b = 0.1$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-0.1.png}} \\\hline
+		
+		\rownumber & 
+		$a = 5, b = 0$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-5-0}} \\\hline
+		
+		\rownumber & 
+		$a = 1000, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-1000-5}} \\\hline		
+		\rownumber & 
+		$a = 100, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-100-5}} \\\hline
+		
+		\rownumber & 
+		$a = 10, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-10-5}} \\\hline
+		
+		\rownumber & 
+		$a = 1, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-1-5}} \\\hline
+		
+		\rownumber & 
+		$a = 0.1, b = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-0.1-5.png}} \\\hline		
+			
+\end{longtable}
+\end{center}
+
+این دو پارامتر در حقیقت اسپارسیتی گراف خروجی را مشخص می‌کنند. اما آن جنان معنادار نیستند.
+مقاله‌ی \cite{largescale-kalofolias2019large}، 
+این دو پارامتر را به دو پارامتر $\gamma,\theta$ می‌نگارد که $\theta$ را می‌توان جهت رسیدن به اسپارستی مطلوب تنظیم کرد. اگر هر رأس به طور میانگین با $k$ مجاور باشد، می‌توان با استفاده از تابع 
+\verb|gsp_compute_graph_learning_theta(Z,k)|
+پارامتر جدید $\theta$ را تعیین کرد که به شکل زیر از آن استفاده می‌شود.
+
+\begin{latin}
+\begin{lstlisting}
+k = 8;
+theta = gsp_compute_graph_learning_theta(Z, k); 
+[W] = gsp_learn_graph_log_degrees(theta * Z, 1, 1);
+if max(max(W)) > 1e-3,  W = W / max(max(W)); end
+W(W<1e-3) = 0; % clean up zeros
+G = gsp_update_weights(G1,W);
+draw_animal_graph(G.L,names);
+text(0.3,-0.05,sprintf('gsp-learn-graph-log-degrees(%g Z,1,1)', theta), "Units", "normalized")
+\end{lstlisting}
+\end{latin}
+
+در این صورت می‌توان با تغییر $k$، نتایج معنا دار تری را گرفت که در جدول زیر، این نتایج آورده شده‌اند.
+
+
+\begin{center}
+%	\footnotesize
+	\begin{longtable}{ccC{0.65\linewidth}}
+		\caption{مقایسه نتایج با تغییر پارامتر $k$} \label{tab:comparison-k} \vspace{-1em} \\
+		
+		
+		\hline \multicolumn{1}{c}{\textbf{ردیف}} &  \multicolumn{1}{c}{\textbf{مشخصات}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endfirsthead
+		
+		\multicolumn{3}{c}%
+		{{\bfseries \tablename\ \thetable{}: ادامه‌ی جدول مقایسه نتایج با تغییر پارامتر $k$}} \\
+		\hline \multicolumn{1}{c}{\textbf{ردیف}} &  \multicolumn{1}{c}{\textbf{مشخصات}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endhead
+		
+		\hline \multicolumn{3}{l}{{ادامه در صفحه بعد}} \\ \hline
+		\endfoot
+		
+		\hline \hline
+		\endlastfoot
+		
+		\rownumber & 
+		$k = 4$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k4}} \\\hline
+				
+		\rownumber & 
+		$k = 5$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k5}} \\\hline
+				
+		\rownumber & 
+		$k = 8$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k8}} \\\hline
+				
+		\rownumber & 
+		$k = 10$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k10}} \\\hline
+				
+		\rownumber & 
+		$k = 15$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k15}} \\\hline
+						
+		\rownumber & 
+		$k = 20$ & \raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/gsp-learn-graph-log-degrees-Z-k20}} \\\hline
+		
+			
+	\end{longtable}
+\end{center}
+
+\subsection{}%4
+
+\subsection{}%5
+
+\subsection{}%6
+
+\section{بخش دوم}
+
+
+\subsection{} %1
+
+\begin{latin}
+\begin{lstlisting}
+function cs = cosine_similarity(x,y) % row data
+if nargin < 2, y = x; end
+n = size(x, 1);
+m = size(y, 1);
+normX = sqrt(sum(abs(x).^2, 2));
+normY = sqrt(sum(abs(y).^2, 2));
+cs = zeros(n,m);
+for i = 1:n
+	for j = 1:m
+		cs(i,j) = x(i,:) * y(j,:)' / (normX(i) * normY(j));
+	end
+end
+end
+\end{lstlisting}
+\end{latin}
+
+
+\begin{latin}
+\begin{lstlisting}
+function Gquery = query2graph(tokens, k, normalized)
+if nargin < 2, k = 5; end
+if nargin < 3, normalized = true; end
+CS = cosine_similarity(tokens);
+Z = zero_diag(1 - CS).^2; % cosine distance
+theta = gsp_compute_graph_learning_theta(Z, k);
+W = gsp_learn_graph_log_degrees(theta*Z, 1, 1);
+W(W<1e-3) = 0; % clean up zeros
+if normalized && max(W(:)) > 1e-3, W = W / max(W(:)); end
+G = gsp_ring(size(W,1));
+Gquery = gsp_graph(W, G.coords);
+end
+\end{lstlisting}
+\end{latin}
+
+
+
+\subsection{} %2
+
+\begin{latin}
+\begin{lstlisting}
+queries_csv = readtable('queries.csv');
+queries_csv.tokens = arrayfun(@(qt) jsondecode(strrep(qt,'''', '"')), queries_csv.tokens, 'UniformOutput', false);
+num_queries = size(queries_csv, 1);
+load('tokens_of_queries.mat')
+load('queries.mat')
+\end{lstlisting}
+\end{latin}
+
+\begin{LTR}
+\begin{latin}
+\begin{lstlisting}
+Gqueries = cell(1, num_queries);
+for qi = 1:num_queries
+	tokens = tokens_of_queries{qi};
+	Gqueries{qi} = query2graph(tokens, floor(0.35*size(tokens,1)));
+	draw_animal_graph(Gqueries{qi}.L, queries_csv.tokens{qi});
+	set(gcf, 'Name', sprintf('query: %g',qi), 'MenuBar', 'none', ...
+	'numbertitle', 'off', 'Units', 'normalized', 'Position',[0.4 0.05 0.55 0.9]);
+end
+\end{lstlisting}
+\end{latin}
+\end{LTR}
+
+نتایج آن در جدول زیر آورده شده است.
+
+
+\newpage
+\begin{center}
+	\newcommand{\addQueryGraphImage}[1]{#1 & %
+		\raisebox{-0.98\totalheight}{\includegraphics[width=\linewidth]{figs/partB-query2graph-#1}}\\}
+	\begin{longtable}{cC{0.65\linewidth}}
+		\caption{گراف نظیر کوئری های مختلف} \label{tab:graph2query} \vspace{-1em} \\
+		
+		\hline \multicolumn{1}{c}{\textbf{شماره کوئری}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endfirsthead
+		
+		\multicolumn{2}{c}%
+		{{\bfseries \tablename\ \thetable{}:ادامه جدول گراف نظیر کوئری های مختلف}} \\
+		\hline \multicolumn{1}{c}{\textbf{شماره کوئری}} & \multicolumn{1}{c}{\textbf{گراف خروجی}} \\\hline 
+		\endhead
+		
+		\hline \multicolumn{2}{l}{{ادامه در صفحه بعد}} \\ \hline
+		\endfoot
+		
+		\hline \hline
+		\endlastfoot
+		
+%		\makeatletter
+%		\@whilenum\value{magicrownumbers}<10\do
+%		{\stepcounter{magicrownumbers}\addQueryGraphImage{\themagicrownumbers}\hline}
+%		\makeatother
+		
+		\addQueryGraphImage{1}\hline
+		\addQueryGraphImage{2}\hline
+		\addQueryGraphImage{3}\hline
+		\addQueryGraphImage{4}\hline
+		\addQueryGraphImage{5}\hline
+		\addQueryGraphImage{6}\hline
+		\addQueryGraphImage{7}\hline
+		\addQueryGraphImage{8}\hline
+		\addQueryGraphImage{9}\hline
+		\addQueryGraphImage{10}\hline
+		
+	\end{longtable}
+\end{center}
+
+
+
+
+\subsection{} %3
+با استفاده از \lr{Add-Ons} متلب نصب شد.
+
+\subsection{} %4
+
+\begin{latin}
+\begin{lstlisting}
+X = cell(1,num_queries);
+for qi = 1:num_queries
+	X{qi} = cosine_similarity(tokens_of_queries{qi}, queries{qi});
+	VV = GCModulMax1(Gqueries{qi}.W);
+	VVmax = max(VV);
+	Vmask = VV == unique(VV)';
+	Vmax = max(sum(Vmask,1));
+	[~,I] = max(X{qi}.*Vmask,[],1);
+	tokens = queries_csv.tokens{qi};
+	clusters = cell(Vmax+1, VVmax);
+	for v = 1:VVmax
+		mask = Vmask(:,v);
+		clusters(:,v) = [tokens(I(v)); tokens(mask); repmat({' '}, Vmax - sum(mask),1)];
+	end
+	writetable(cell2table(clusters(2:end,:),'VariableNames',clusters(1,:)), sprintf('Report/figs/partB-clusters-%g.csv',qi))
+end
+\end{lstlisting}
+\end{latin}
+
+
+کوئری 1:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-1.csv}{}
+
+\newline\newline کوئری 2:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-2.csv}{}
+
+\newline\newline کوئری 3:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-3.csv}{}
+
+\newline\newline کوئری 4:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-4.csv}{}
+
+\newline\newline کوئری 5:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-5.csv}{}
+
+\newline\newline کوئری 6:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-6.csv}{}
+
+\newline\newline کوئری 7:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-7.csv}{}
+
+\newline\newline کوئری 8:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-8.csv}{}
+
+\newline\newline کوئری 9:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-9.csv}{}
+
+\newline\newline کوئری 10:
+\newline\csvreader[myautotabularcenter]{figs/partB-clusters-10.csv}{}
+
+
+
+
+
+
+
+
+\subsection{} %5
+
+
+
+
+
+
+
+\section{بخش سوم}
+
+
+\subsection{} %1
+نحوه خواندن اطلاعات در این قسمت مانند قسمت قبل است.
+
+\begin{latin}
+\begin{lstlisting}
+queries_csv = readtable("queries.csv");
+queries_csv.tokens = arrayfun(@(qt) jsondecode(strrep(qt,'''', '"')), queries_csv.tokens, 'UniformOutput', false);
+num_queries = size(queries_csv, 1);
+load('tokens_of_queries.mat');
+load('queries.mat');
+load('docs.mat'); docs = cell2mat(docs);
+\end{lstlisting}
+\end{latin}
+
+
+
+\subsection{} %2
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figs/partC-Gdocs-W}
+	\caption{}
+	\label{fig:partc-gdocs-w}
+\end{figure}\FloatBarrier
+
+
+
+
+\subsection{} %3
+
+\begin{latin}
+\begin{lstlisting}
+X = cosine_similarity(docs, queries{1});
+[Gs, ms, ys, xs] = MyPyramidAnalysis(Gdocs, X, 7);
+Gselected = Gs{end};
+N = Gselected.N; % 17
+Xselected = xs{end};
+Mselected = ms{end};
+Xsampled = X(Mselected);
+disp((Xsampled/max(X))') 
+figure('Color','w'); gsp_plot_signal(Gdocs, X);
+figure('Color','w'); gsp_plot_signal(Gselected, Xselected);
+\end{lstlisting}
+\end{latin}
+
+
+
+
+\begin{figure}[h!]
+	\centering
+	\subfigure[]{
+		\includegraphics[width=0.45\linewidth]{figs/partC-Gdocs}
+		\label{fig:partc-gdocs}}
+	\hfill
+	\subfigure[]{
+		\includegraphics[width=0.45\linewidth]{figs/partC-Gselected}
+		\label{fig:partc-gselected}}
+	\caption{}
+\end{figure}\FloatBarrier
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figs/partC-Gsampled}
+	\caption{}
+	\label{fig:partc-gsampled}
+\end{figure}\FloatBarrier
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\begin{latin}
+	\baselineskip=.8\baselineskip
+	%\bibliographystyle{./styles/packages/unsrtabbrv}
+	\bibliographystyle{plainurl}
+	
+	% Uncomment next line to include uncited references
+	\nocite{*}
+	\bibliography{refs}
+\end{latin}
+
+\end{document}
