@@ -1,3 +1,6 @@
 [submodule "gspbox"]
 	path = gspbox
 	url = https://github.com/epfl-lts2/gspbox
+[submodule "Computer/HW4-bonus/Graph_Learning"]
+	path = Computer/HW4-bonus/Graph_Learning
+	url = https://github.com/STAC-USC/Graph_Learning
